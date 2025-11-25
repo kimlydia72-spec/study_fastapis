@@ -4,6 +4,9 @@ from urllib3 import request
 
 app = FastAPI()
 
+from routes.todos import router as todos_router
+app.include_router(todos_router, prefix="/todos")
+
 # http://localhost:8000/
 @app.get("/")
 async def root():
