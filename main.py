@@ -1,5 +1,5 @@
-from turtle import title
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from urllib3 import request
 
 app = FastAPI()
@@ -66,26 +66,76 @@ async def user_list(request: Request):
     return templates.TemplateResponse("users/list.html"
                                       , context)
 
+# 1. GET 방식: 쿼리 파라미터 읽기 (JSON 반환)
 # http://localhost:8000/board/detail_json?title=Third%20Post&content=This%20is%20the%20third%20post.
 @app.get("/board/detail_json")
-async def board_detail_json(request: Request): # request = Request()
-    # request.method
-    # request.query_params
-    params = dict(request.query_params)
-
-    # return {"title": "Third Post", "content" : "This is the third post."}
-    return {"title": params['title'], "content": params['content']}
+async def board_detail_json(request: Request):
+    # request.query_params는 딕셔너리처럼 동작합니다.
+    params = request.query_params
+    
+    # params['title'] 대신 params.get('title')을 사용하면
+    # 값이 없을 때 에러 대신 None을 반환하여 안전합니다.
+    return {
+        "title": params.get('title'), 
+        "content": params.get('content')
+    }
 
 # http://localhost:8000/board/detail_json?title=Third%20Post&content=This%20is%20the%20third%20post.
-@app.get("/board/detail_post_json")
-async def board_detail_post_json(request: Request): # request = Request()
-    # request.method
-    # request.query_params
-    params = dict(request.query_params)
+# @app.get("/board/detail_json")
+# async def board_detail_json(request: Request): # request = Request()
+#     # request.method
+#     # request.query_params
+#     params = dict(request.query_params)
 
-    # return {"title": "Third Post", "content" : "This is the third post."}
-    return {"title": params['title'], "content": params['content']}
+#     # return {"title": "Third Post", "content" : "This is the third post."}
+#     return {"title": params['title'], "content": params['content']}
 
+# 2. POST 방식: Form 데이터 읽기 (JSON 반환)
+# HTML Form에서 action="/board/detail_post_json"으로 요청을 보낼 때 실행됨
+@app.post("/board/detail_post_json")
+async def board_detail_post_json(request: Request):
+    # form 데이터는 비동기(async)로 읽어야 하므로 await가 필수입니다.
+    form_data = await request.form()
+    
+    # 딕셔너리로 변환
+    params = dict(form_data)
+
+    return {
+        "title": params.get('title'), 
+        "content": params.get('content')
+    }
+
+# http://localhost:8000/board/detail_json?title=Third%20Post&content=This%20is%20the%20third%20post.
+# @app.post("/board/detail_post_json")
+# async def board_detail_post_json(request: Request): # request = Request()
+#     # request.method
+#     # request.query_params
+#     params = dict(await request.form())
+
+#     # return {"title": "Third Post", "content" : "This is the third post."}
+#     return {"title": params['title'], "content": params['content']}
+
+# 3. GET 방식: HTML 템플릿 렌더링
+# http://localhost:8000/board/detail_html
+@app.get("/board/detail_html", response_class=HTMLResponse)
+async def main_html(request: Request):
+    # [수정됨] "boards" -> "board" (폴더명 일치)
+    return templates.TemplateResponse(
+        "board/detail.html", 
+        {"request": request}
+    )
+
+# http://localhost:8000/board/detail_html/{detail_id}
+# @app.get("/board/detail_html/{detail_id}")
+# async def main_html(request: Request, detail_id):
+#     return templates.TemplateResponse("board/detail.html" 
+#                                       , {"request": request})
+
+# http://localhost:8000/board/detail_html
+@app.get("/board/detail_html")
+async def main_html(request: Request):
+    return templates.TemplateResponse("board/detail.html" 
+                                      , {"request": request})
 
 # 정적 파일 설정
 # from fastapi.staticfiles import StaticFiles
