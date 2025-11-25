@@ -64,6 +64,11 @@ async def user_list(request: Request):
     return templates.TemplateResponse("users/list.html"
                                       , context)
 
+# http://localhost:8000/board/detail_json?title=Third%20Post&content=This%20is%20the%20third%20post.
+@app.get("/board/detail_json")
+async def board_detail_json(request: Request):
+    return {"title": "Third Post", "content" : "This is the third post."}
+
 # 정적 파일 설정
 from fastapi.staticfiles import StaticFiles
 app.mount("/images", StaticFiles(directory="resources/images"))
